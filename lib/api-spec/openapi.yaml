@@ -3,13 +3,15 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: GrowEasy AI CSV Importer API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: csv
+    description: CSV parsing and AI import operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,63 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /csv/parse:
+    post:
+      operationId: parseCSV
+      tags: [csv]
+      summary: Parse raw CSV text
+      description: Accepts raw CSV text and returns parsed rows for preview. No AI processing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ParseCSVInput"
+      responses:
+        "200":
+          description: Parsed CSV data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParsedCSV"
+        "400":
+          description: Invalid CSV
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /csv/import:
+    post:
+      operationId: importCSV
+      tags: [csv]
+      summary: AI-extract CRM leads from parsed CSV rows
+      description: Sends parsed CSV rows through AI to extract GrowEasy CRM fields in batches.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportCSVInput"
+      responses:
+        "200":
+          description: Extracted CRM records
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "500":
+          description: AI processing error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +93,104 @@ components:
       required:
         - status
 
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    ParseCSVInput:
+      type: object
+      required: [csvText]
+      properties:
+        csvText:
+          type: string
+          description: Raw CSV file contents as a string
+
+    ParsedCSV:
+      type: object
+      required: [columns, rows, totalRows]
+      properties:
+        columns:
+          type: array
+          items:
+            type: string
+          description: Column headers from the CSV
+        rows:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: string
+          description: Parsed rows as key-value pairs
+        totalRows:
+          type: integer
+          description: Total number of data rows parsed
+
+    ImportCSVInput:
+      type: object
+      required: [rows, columns]
+      properties:
+        rows:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: string
+          description: Parsed CSV rows to process through AI
+        columns:
+          type: array
+          items:
+            type: string
+          description: Column headers for AI context
+
+    CrmRecord:
+      type: object
+      properties:
+        created_at:
+          type: ["string", "null"]
+        name:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        country_code:
+          type: ["string", "null"]
+        mobile_without_country_code:
+          type: ["string", "null"]
+        company:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+        lead_owner:
+          type: ["string", "null"]
+        crm_status:
+          type: ["string", "null"]
+        crm_note:
+          type: ["string", "null"]
+        data_source:
+          type: ["string", "null"]
+        possession_time:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+
+    ImportResult:
+      type: object
+      required: [records, imported, skipped, total]
+      properties:
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/CrmRecord"
+        imported:
+          type: integer
+        skipped:
+          type: integer
+        total:
+          type: integer

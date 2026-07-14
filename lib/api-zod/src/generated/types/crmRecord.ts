@@ -5,38 +5,6 @@
  * GrowEasy AI CSV Importer API
  * OpenAPI spec version: 0.1.0
  */
-export interface HealthStatus {
-  status: string;
-}
-
-export interface ApiError {
-  error: string;
-}
-
-export interface ParseCSVInput {
-  /** Raw CSV file contents as a string */
-  csvText: string;
-}
-
-export type ParsedCSVRowsItem = {[key: string]: string};
-
-export interface ParsedCSV {
-  /** Column headers from the CSV */
-  columns: string[];
-  /** Parsed rows as key-value pairs */
-  rows: ParsedCSVRowsItem[];
-  /** Total number of data rows parsed */
-  totalRows: number;
-}
-
-export type ImportCSVInputRowsItem = {[key: string]: string};
-
-export interface ImportCSVInput {
-  /** Parsed CSV rows to process through AI */
-  rows: ImportCSVInputRowsItem[];
-  /** Column headers for AI context */
-  columns: string[];
-}
 
 export interface CrmRecord {
   /** @nullable */
@@ -70,11 +38,3 @@ export interface CrmRecord {
   /** @nullable */
   description?: string | null;
 }
-
-export interface ImportResult {
-  records: CrmRecord[];
-  imported: number;
-  skipped: number;
-  total: number;
-}
-
